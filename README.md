@@ -8,6 +8,10 @@ Each action stores an executable path and a JSON array of arguments. The plugin 
 
 ## Features
 
+- A dedicated **PhotoCraft Edit Control** action for the document open in the desktop app, using PhotoCraft's authenticated loopback control channel.
+- Key actions for undo/redo/save, Crop and Brush tools, reveal-all layer masks, Exposure and Vibrance adjustment layers, selection commands, and useful view presets.
+- Encoder modes for brush size, brush hardness, and canvas zoom; encoder press is configured separately for fast fit, undo, crop, or mask workflows.
+- The action stores only a local token-file path, never the authentication secret itself.
 - One configurable **Run PhotoCraft CLI** action for keypad keys and encoders.
 - Supports every PhotoCraft CLI subcommand, option, and future addition: the action forwards the exact JSON argument array you configure.
 - Loads the installed CLI's command or tool catalog in the Property Inspector and creates an app-specific, editable action template.
@@ -20,6 +24,14 @@ Each action stores an executable path and a JSON array of arguments. The plugin 
 - Linux x86_64
 - OpenDeck with OpenAction-compatible plugin support
 - PhotoCraft and `photocraft-cli` installed and available in `PATH`, or its absolute path entered in the Property Inspector
+
+For **PhotoCraft Edit Control**, start PhotoCraft with a loopback control port and a private token file, then enter that file's path in the action inspector:
+
+```bash
+photocraft --control 7878 --control-token-file /private/path/photocraft-control.token
+```
+
+PhotoCraft creates the token file when it does not exist. The OpenDeck action accepts only `localhost`, `127.0.0.1`, or `::1` and reads the token only when sending a control request.
 
 ## Install
 
