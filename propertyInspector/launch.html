@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Open PhotoCraft</title><link rel="stylesheet" href="run.css"></head>
+<body><main>
+  <h1>Open PhotoCraft</h1><p class="hint">Starts the desktop app with its authenticated local control channel. Use the same host, port, and token file in PhotoCraft Edit Control.</p>
+  <label>Desktop executable <span class="optional">optional</span><input id="executable" type="text" placeholder="photocraft"></label>
+  <div class="grid"><label>Control host<input id="controlHost" value="127.0.0.1"></label><label>Control port<input id="controlPort" type="number" min="1" max="65535" value="7878"></label></div>
+  <label>Control-token file<input id="tokenFile" type="text" placeholder="/private/path/photocraft-control.token"></label>
+  <p class="hint">The token file must already exist and contain the same private 64-character token the Edit Control uses.</p>
+  <label>Working directory <span class="optional">optional</span><input id="workingDirectory" type="text" placeholder="/home/me/Pictures"></label><label>Key title<input id="title" value="Open PhotoCraft"></label>
+  <div class="buttons"><button id="test" type="button">Open PhotoCraft now</button></div><p id="status" role="status">Place this action on a key, then press it to open PhotoCraft.</p>
+</main><script>
+let socket,context;const $=id=>document.getElementById(id),fields=["executable","controlHost","controlPort","tokenFile","workingDirectory","title"];
+function settings(){return{executable:$("executable").value.trim(),controlHost:$("controlHost").value.trim(),controlPort:Number($("controlPort").value)||7878,tokenFile:$("tokenFile").value.trim(),workingDirectory:$("workingDirectory").value.trim(),title:$("title").value.trim()||"Open PhotoCraft"}}
+function persist(){if(socket&&context)socket.send(JSON.stringify({event:"setSettings",context,payload:settings()}))}function status(message,error=false){const el=$("status");el.textContent=message||"Ready.";el.className=error?"error":""}
+function receive(event){let message;try{message=JSON.parse(event.data)}catch(_){return}const payload=message.payload||{};if(message.event==="sendToPropertyInspector"&&payload.kind==="launch")status(payload.message,!payload.ok)}
+function connectElgatoStreamDeckSocket(port,propertyInspectorUUID,registerEvent,info,actionInfo){const action=JSON.parse(actionInfo),saved=(action.payload&&action.payload.settings)||{};context=action.context;$("executable").value=saved.executable||"";$("controlHost").value=saved.controlHost||"127.0.0.1";$("controlPort").value=saved.controlPort||7878;$("tokenFile").value=saved.tokenFile||"";$("workingDirectory").value=saved.workingDirectory||"";$("title").value=saved.title||"Open PhotoCraft";fields.forEach(id=>$(id).addEventListener("input",persist));socket=new WebSocket(`ws://localhost:${port}`);socket.onopen=()=>socket.send(JSON.stringify({event:registerEvent,uuid:propertyInspectorUUID}));socket.onmessage=receive;$("test").addEventListener("click",()=>{persist();status("Opening PhotoCraft…");if(socket&&context)socket.send(JSON.stringify({event:"sendToPlugin",context,payload:{request:"launch",settings:settings()}}))})}
+</script></body></html>

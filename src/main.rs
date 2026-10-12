@@ -16,6 +16,8 @@ use tokio::{
 };
 
 const DEFAULT_EXECUTABLE: &str = "photocraft-cli";
+const DEFAULT_DESKTOP_EXECUTABLE: &str = "photocraft";
+const DEFAULT_CONTROL_PORT: u16 = 7878;
 const CATALOG_ARGUMENTS: &[&str] = &["commands", "--json"];
 const DEFAULT_ARGUMENTS: &str = r#"["commands","--json"]"#;
 const MAX_ARGUMENTS: usize = 128;
@@ -717,6 +719,182 @@ impl Action for PhotoCraftEditControl {
     }
 }
 
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(default, rename_all = "camelCase")]
+struct LaunchSettings {
+    executable: String,
+    control_host: String,
+    control_port: u16,
+    token_file: String,
+    working_directory: String,
+    title: String,
+}
+
+impl Default for LaunchSettings {
+    fn default() -> Self {
+        Self {
+            executable: String::new(),
+            control_host: "127.0.0.1".into(),
+            control_port: DEFAULT_CONTROL_PORT,
+            token_file: String::new(),
+            working_directory: String::new(),
+            title: "Open PhotoCraft".into(),
+        }
+    }
+}
+
+impl LaunchSettings {
+    fn executable(&self) -> &str {
+        let value = self.executable.trim();
+        if value.is_empty() {
+            DEFAULT_DESKTOP_EXECUTABLE
+        } else {
+            value
+        }
+    }
+    fn host(&self) -> &str {
+        let value = self.control_host.trim();
+        if value.is_empty() {
+            "127.0.0.1"
+        } else {
+            value
+        }
+    }
+    fn port(&self) -> Result<u16, ExecutionError> {
+        if self.control_port == 0 {
+            Err(ExecutionError::Configuration(
+                "Choose a control port from 1 to 65535.".into(),
+            ))
+        } else {
+            Ok(self.control_port)
+        }
+    }
+    fn arguments(&self) -> Result<Vec<String>, ExecutionError> {
+        let token_file = self.token_file.trim();
+        if token_file.is_empty() {
+            return Err(ExecutionError::Configuration(
+                "Choose the private control-token file PhotoCraft should use.".into(),
+            ));
+        }
+        if !PathBuf::from(token_file).is_file() {
+            return Err(ExecutionError::Configuration("The PhotoCraft control-token file must already exist and contain a 64-character token.".into()));
+        }
+        Ok(vec![
+            "--control".into(),
+            self.port()?.to_string(),
+            "--control-token-file".into(),
+            token_file.into(),
+        ])
+    }
+}
+
+async fn launch_photocraft(settings: &LaunchSettings) -> Result<String, ExecutionError> {
+    let host = settings.host();
+    if !loopback_host(host) {
+        return Err(ExecutionError::Configuration("PhotoCraft exposes its control channel only on localhost. Use 127.0.0.1, localhost, or ::1.".into()));
+    }
+    let port = settings.port()?;
+    if matches!(
+        tokio::time::timeout(Duration::from_millis(250), TcpStream::connect((host, port))).await,
+        Ok(Ok(_))
+    ) {
+        return Ok(format!("PhotoCraft is already ready at {host}:{port}."));
+    }
+    let mut command = Command::new(settings.executable());
+    command
+        .args(settings.arguments()?)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .kill_on_drop(false);
+    if !settings.working_directory.trim().is_empty() {
+        command.current_dir(PathBuf::from(settings.working_directory.trim()));
+    }
+    command.spawn().map_err(|error| {
+        ExecutionError::Process(format!("Could not open {}: {error}", settings.executable()))
+    })?;
+    Ok(format!("Starting PhotoCraft at {host}:{port}."))
+}
+
+async fn report_launch(
+    instance: &Instance,
+    settings: &LaunchSettings,
+    result: Result<String, ExecutionError>,
+    inspector: bool,
+) {
+    match result {
+        Ok(message) => {
+            let _ = instance.set_title(Some(settings.title.clone()), None).await;
+            let _ = instance.show_ok().await;
+            if inspector {
+                let _ = instance
+                    .send_to_property_inspector(
+                        json!({"kind":"launch","ok":true,"message":message}),
+                    )
+                    .await;
+            }
+        }
+        Err(error) => {
+            let message = error.to_string();
+            log::warn!("PhotoCraft launcher failed: {message}");
+            let _ = instance.set_title(Some("Error".to_string()), None).await;
+            let _ = instance.show_alert().await;
+            if inspector {
+                let _ = instance
+                    .send_to_property_inspector(
+                        json!({"kind":"launch","ok":false,"message":message}),
+                    )
+                    .await;
+            }
+        }
+    }
+}
+
+struct LaunchPhotoCraft;
+
+#[async_trait]
+impl Action for LaunchPhotoCraft {
+    const UUID: &'static str = "wt.luizgustavo.getcraft.photocraft.launch";
+    type Settings = LaunchSettings;
+    async fn key_down(
+        &self,
+        instance: &Instance,
+        settings: &Self::Settings,
+    ) -> OpenActionResult<()> {
+        report_launch(instance, settings, launch_photocraft(settings).await, false).await;
+        Ok(())
+    }
+    async fn will_appear(
+        &self,
+        instance: &Instance,
+        settings: &Self::Settings,
+    ) -> OpenActionResult<()> {
+        let _ = instance.set_title(Some(settings.title.clone()), None).await;
+        Ok(())
+    }
+    async fn send_to_plugin(
+        &self,
+        instance: &Instance,
+        settings: &Self::Settings,
+        payload: &Value,
+    ) -> OpenActionResult<()> {
+        if payload.get("request").and_then(Value::as_str) == Some("launch") {
+            let effective = payload
+                .get("settings")
+                .and_then(|value| serde_json::from_value::<LaunchSettings>(value.clone()).ok())
+                .unwrap_or_else(|| settings.clone());
+            report_launch(
+                instance,
+                &effective,
+                launch_photocraft(&effective).await,
+                true,
+            )
+            .await;
+        }
+        Ok(())
+    }
+}
+
 struct RunPhotoCraftCli;
 
 #[async_trait]
@@ -780,6 +958,7 @@ async fn main() -> OpenActionResult<()> {
         ColorChoice::Never,
     );
     register_action(PhotoCraftEditControl).await;
+    register_action(LaunchPhotoCraft).await;
     register_action(RunPhotoCraftCli).await;
     run(std::env::args().collect()).await
 }
@@ -787,6 +966,11 @@ async fn main() -> OpenActionResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn launcher_requires_a_private_token_file() {
+        assert!(LaunchSettings::default().arguments().is_err());
+    }
 
     #[test]
     fn accepts_a_string_argument_vector() {

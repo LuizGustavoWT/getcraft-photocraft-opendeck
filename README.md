@@ -9,6 +9,7 @@ An independent Linux-only [OpenDeck](https://github.com/nekename/OpenDeck) plugi
 ## Features
 
 - A dedicated **PhotoCraft Edit Control** action for the document open in the desktop app, using PhotoCraft's authenticated loopback control channel.
+- **Open PhotoCraft** starts the desktop app with the selected loopback host, port, and private token file used by the Edit Control.
 - Key actions for undo/redo/save, Crop and Brush tools, reveal-all layer masks, Exposure and Vibrance adjustment layers, selection commands, and useful view presets.
 - Encoder modes for brush size, brush hardness, canvas zoom, selected-layer opacity, and selected Exposure, Brightness/Contrast, or Vibrance adjustment layers; encoder press is configured separately for fast fit, undo, crop, or mask workflows.
 - The action stores only a local token-file path, never the authentication secret itself.
@@ -37,7 +38,7 @@ PhotoCraft creates the token file when it does not exist. The OpenDeck action ac
 
 1. Download `getcraft-photocraft-opendeck-linux-x86_64.zip` from the [latest release](../../releases/latest).
 2. In OpenDeck, open **Plugins** → **Install from file** and select the ZIP. Do not extract or rename the `.sdPlugin` directory.
-3. Start PhotoCraft with the control command above, then drag **PhotoCraft Editing Controls → PhotoCraft Edit Control** to a key or encoder.
+3. Drag **PhotoCraft Editing Controls → Open PhotoCraft** to a key, set its executable, host, port, and private token file, then press it. Use the same endpoint in **PhotoCraft Edit Control**.
 4. Enter the token-file path and choose key, encoder-turn, and encoder-press workflows in the Property Inspector.
 5. Keep **PhotoCraft CLI → Run PhotoCraft CLI** for an arbitrary CLI operation; enter its path and JSON argument array, then use **Test command**.
 
@@ -111,6 +112,7 @@ A **PhotoCraft Edit Control** conversa com o aplicativo desktop pelo canal local
 ## Recursos
 
 - Ação dedicada **PhotoCraft Edit Control** para o documento que está aberto no aplicativo, usando o canal local autenticado do PhotoCraft.
+- **Open PhotoCraft** abre o aplicativo com host loopback, porta e arquivo privado de token que a Edit Control usará.
 - Ações de tecla para desfazer/refazer/salvar, ferramentas Crop e Brush, máscaras de camada revelar tudo, camadas de ajuste Exposure e Vibrance, comandos de seleção e atalhos úteis de visualização.
 - Modos de encoder para tamanho e dureza do pincel, zoom da tela, opacidade da camada selecionada e os valores das camadas de ajuste Exposure, Brightness/Contrast e Vibrance selecionadas.
 - O encoder pode ter uma ação de pressão independente para ajustar rapidamente a tela, desfazer, usar Crop ou criar uma máscara; o segredo de autenticação fica no arquivo de token local, nunca no perfil do Stream Deck.
@@ -135,7 +137,7 @@ O PhotoCraft cria o arquivo de token se ele não existir. A ação aceita soment
 
 1. Baixe `getcraft-photocraft-opendeck-linux-x86_64.zip` na [release mais recente](../../releases/latest).
 2. No OpenDeck, abra **Plugins** → **Install from file** e escolha o ZIP. Não extraia nem renomeie a pasta `.sdPlugin`.
-3. Arraste **PhotoCraft Editing Controls → PhotoCraft Edit Control** para uma tecla ou encoder.
+3. Arraste **PhotoCraft Editing Controls → Open PhotoCraft** para uma tecla, configure executável, host, porta e arquivo privado de token, depois pressione-a. Use o mesmo endpoint na **PhotoCraft Edit Control**.
 4. Informe o caminho do arquivo de token e escolha os fluxos da tecla, do giro e da pressão do encoder no Property Inspector.
 5. Use **PhotoCraft CLI → Run PhotoCraft CLI** para uma operação CLI arbitrária; configure o caminho e o vetor JSON, depois use **Test command**.
 
