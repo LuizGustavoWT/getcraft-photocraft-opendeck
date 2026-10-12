@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PhotoCraft Edit Control</title><link rel="stylesheet" href="run.css"></head>
+<body><main>
+  <h1>PhotoCraft Edit Control</h1>
+  <p class="hint">Works with the open PhotoCraft document through its authenticated local control channel. Start it with <code>--control 7878 --control-token-file /private/path/token</code>.</p>
+  <div class="grid"><label>Control host<input id="controlHost" value="127.0.0.1" placeholder="127.0.0.1"></label><label>Control port<input id="controlPort" type="number" min="1" max="65535" value="7878"></label></div>
+  <label>Control-token file<input id="tokenFile" type="text" placeholder="/private/path/photocraft-control.token"></label>
+  <p class="hint">The token itself is never stored in the Stream Deck profile; the plugin reads this local file only when it runs.</p>
+  <label>Key action<select id="keyAction">
+    <option value="undo">Undo</option><option value="redo">Redo</option><option value="save">Save</option><option value="cropTool">Select Crop tool</option><option value="brushTool">Select Brush tool</option>
+    <option value="mask">Add reveal-all layer mask</option><option value="newExposure">New Exposure adjustment layer</option><option value="newVibrance">New Vibrance adjustment layer</option>
+    <option value="fitScreen">Fit on screen</option><option value="actualPixels">100% view</option><option value="selectAll">Select all</option><option value="deselect">Deselect</option><option value="invertSelection">Inverse selection</option>
+  </select></label>
+  <label>Encoder turn<select id="dialAction"><option value="brushSize">Brush size</option><option value="brushHardness">Brush hardness</option><option value="zoom">Canvas zoom</option><option value="layerOpacity">Selected layer opacity</option><option value="exposure">Selected Exposure layer</option><option value="contrast">Selected Brightness/Contrast layer</option><option value="vibrance">Selected Vibrance layer</option></select></label>
+  <p class="hint">Exposure, contrast, and vibrance knobs update the selected matching adjustment layer non-destructively. The key actions above create Exposure and Vibrance layers quickly.</p>
+  <div class="grid"><label>Turn step<input id="dialStep" type="number" min="0.01" max="100" step="0.01" value="1"></label><label>Encoder press<select id="pressAction"><option value="fitScreen">Fit on screen</option><option value="undo">Undo</option><option value="redo">Redo</option><option value="cropTool">Select Crop tool</option><option value="mask">Add reveal-all mask</option></select></label></div>
+  <label>Key title<input id="title" value="PhotoCraft" placeholder="PhotoCraft"></label>
+  <div class="buttons"><button id="test" type="button">Test key action</button></div><p id="status" role="status">Configure a control and place it on a key or encoder.</p>
+</main>
+<script>
+let socket,context;const $=id=>document.getElementById(id);const fields=["controlHost","controlPort","tokenFile","keyAction","pressAction","dialAction","dialStep","title"];
+function settings(){return{controlHost:$("controlHost").value.trim(),controlPort:Number($("controlPort").value)||7878,tokenFile:$("tokenFile").value.trim(),keyAction:$("keyAction").value,pressAction:$("pressAction").value,dialAction:$("dialAction").value,dialStep:Number($("dialStep").value)||1,title:$("title").value.trim()||"PhotoCraft"}}
+function persist(){if(socket&&context)socket.send(JSON.stringify({event:"setSettings",context,payload:settings()}))}function status(message,error=false){const el=$("status");el.textContent=message||"Ready.";el.className=error?"error":""}
+function receive(event){let message;try{message=JSON.parse(event.data)}catch(_){return}if(message.event!=="sendToPropertyInspector")return;const p=message.payload||{};if(p.kind==="result")status(p.message||(p.ok?"PhotoCraft responded.":"Control failed."),!p.ok)}
+function connectElgatoStreamDeckSocket(port,propertyInspectorUUID,registerEvent,info,actionInfo){const action=JSON.parse(actionInfo);context=action.context;const saved=(action.payload&&action.payload.settings)||{};fields.forEach(id=>{const key=id[0].toLowerCase()+id.slice(1);if(saved[key]!==undefined)$(id).value=saved[key];$(id).addEventListener(id.endsWith("Action")?"change":"input",persist)});socket=new WebSocket(`ws://localhost:${port}`);socket.onopen=()=>socket.send(JSON.stringify({event:registerEvent,uuid:propertyInspectorUUID}));socket.onmessage=receive;$("test").addEventListener("click",()=>{persist();status("Contacting PhotoCraft…");if(socket&&context)socket.send(JSON.stringify({event:"sendToPlugin",context,payload:{request:"test",settings:settings()}}))})}
+</script></body></html>

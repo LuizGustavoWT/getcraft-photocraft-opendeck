@@ -1,6 +1,6 @@
 {
-  "Name": "PhotoCraft CLI",
-  "Description": "Run PhotoCraft CLI and automation commands safely from OpenDeck (Linux).",
+  "Name": "PhotoCraft Editing Controls",
+  "Description": "Layer, mask, crop, develop, brush, and view controls for a running PhotoCraft session.",
   "Author": "LuizGustavoWT",
   "Version": "0.1.0",
   "PluginUUID": "wt.luizgustavo.getcraft.photocraft",
@@ -12,6 +12,20 @@
   "Category": "GetCraft",
   "OS": [{ "Platform": "linux" }],
   "Actions": [{
+    "UUID": "wt.luizgustavo.getcraft.photocraft.editControl",
+    "Name": "PhotoCraft Edit Control",
+    "Icon": "assets/action",
+    "States": [{
+      "Image": "assets/action",
+      "TitleAlignment": "bottom",
+      "TitleColor": "#FFFFFF",
+      "FontSize": "12"
+    }],
+    "Controllers": ["Keypad", "Encoder"],
+    "SupportedInMultiActions": true,
+    "Tooltip": "Drive a running PhotoCraft session: masks, adjustments, crop, brush, zoom, and edit commands.",
+    "PropertyInspectorPath": "propertyInspector/control.html"
+  }, {
     "UUID": "wt.luizgustavo.getcraft.photocraft.run",
     "Name": "Run PhotoCraft CLI",
     "Icon": "assets/action",
