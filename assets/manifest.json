@@ -1,0 +1,29 @@
+{
+  "Name": "PhotoCraft CLI",
+  "Description": "Run PhotoCraft CLI and automation commands safely from OpenDeck (Linux).",
+  "Author": "LuizGustavoWT",
+  "Version": "0.1.0",
+  "PluginUUID": "wt.luizgustavo.getcraft.photocraft",
+  "CodePaths": {
+    "x86_64-unknown-linux-gnu": "x86_64-unknown-linux-gnu/bin/getcraft-photocraft-opendeck"
+  },
+  "CodePathLin": "x86_64-unknown-linux-gnu/bin/getcraft-photocraft-opendeck",
+  "Icon": "assets/icon",
+  "Category": "GetCraft",
+  "OS": [{ "Platform": "linux" }],
+  "Actions": [{
+    "UUID": "wt.luizgustavo.getcraft.photocraft.run",
+    "Name": "Run PhotoCraft CLI",
+    "Icon": "assets/action",
+    "States": [{
+      "Image": "assets/action",
+      "TitleAlignment": "bottom",
+      "TitleColor": "#FFFFFF",
+      "FontSize": "12"
+    }],
+    "Controllers": ["Keypad", "Encoder"],
+    "SupportedInMultiActions": true,
+    "Tooltip": "Run any PhotoCraft CLI command using safe JSON arguments.",
+    "PropertyInspectorPath": "propertyInspector/run.html"
+  }]
+}
