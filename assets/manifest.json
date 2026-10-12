@@ -2,7 +2,7 @@
   "Name": "PhotoCraft Editing Controls",
   "Description": "Layer, mask, crop, develop, brush, and view controls for a running PhotoCraft session.",
   "Author": "LuizGustavoWT",
-  "Version": "0.2.0",
+  "Version": "0.2.1",
   "PluginUUID": "wt.luizgustavo.getcraft.photocraft",
   "CodePaths": {
     "x86_64-unknown-linux-gnu": "x86_64-unknown-linux-gnu/bin/getcraft-photocraft-opendeck"
