@@ -1,16 +1,16 @@
-# PhotoCraft CLI for OpenDeck
+# PhotoCraft Live Controls for OpenDeck
 
 [Português do Brasil](#português-do-brasil) · [Contributing](CONTRIBUTING.md) · [PhotoCraft](https://github.com/storytold/photocraft) · [OpenDeck](https://github.com/nekename/OpenDeck)
 
-An independent Linux-only [OpenDeck](https://github.com/nekename/OpenDeck) plugin for running every available [PhotoCraft CLI](https://github.com/storytold/photocraft) command from a Stream Deck key. It does not bundle PhotoCraft: point it at the `photocraft-cli` installed on your machine.
+An independent Linux-only [OpenDeck](https://github.com/nekename/OpenDeck) plugin that gives a Stream Deck live control over the open [PhotoCraft](https://github.com/storytold/photocraft) document. Build masks and adjustment layers, switch to Crop or Brush, save, navigate selections, and use encoders for brush size, hardness, zoom, selected-layer opacity, and non-destructive develop adjustments.
 
-Each action stores an executable path and a JSON array of arguments. The plugin launches the executable directly, without `sh -c` or another shell. That makes JSON parameters, spaces in paths, and untrusted filenames safe to pass as arguments.
+**PhotoCraft Edit Control** talks to the desktop app through its authenticated loopback control channel. The retained **Run PhotoCraft CLI** action is for advanced or version-specific automation: it stores an executable path and JSON argument array, then launches the executable directly without `sh -c` or another shell.
 
 ## Features
 
 - A dedicated **PhotoCraft Edit Control** action for the document open in the desktop app, using PhotoCraft's authenticated loopback control channel.
 - Key actions for undo/redo/save, Crop and Brush tools, reveal-all layer masks, Exposure and Vibrance adjustment layers, selection commands, and useful view presets.
-- Encoder modes for brush size, brush hardness, and canvas zoom; encoder press is configured separately for fast fit, undo, crop, or mask workflows.
+- Encoder modes for brush size, brush hardness, canvas zoom, selected-layer opacity, and selected Exposure, Brightness/Contrast, or Vibrance adjustment layers; encoder press is configured separately for fast fit, undo, crop, or mask workflows.
 - The action stores only a local token-file path, never the authentication secret itself.
 - One configurable **Run PhotoCraft CLI** action for keypad keys and encoders.
 - Supports every PhotoCraft CLI subcommand, option, and future addition: the action forwards the exact JSON argument array you configure.
@@ -37,9 +37,9 @@ PhotoCraft creates the token file when it does not exist. The OpenDeck action ac
 
 1. Download `getcraft-photocraft-opendeck-linux-x86_64.zip` from the [latest release](../../releases/latest).
 2. In OpenDeck, open **Plugins** → **Install from file** and select the ZIP. Do not extract or rename the `.sdPlugin` directory.
-3. Drag **PhotoCraft CLI → Run PhotoCraft CLI** to a key.
-4. Enter the CLI path if `photocraft-cli` is not in `PATH`, then enter a JSON argument array.
-5. Use **Test command**. A green check means the CLI exited successfully; an alert means that its error summary is available in the Property Inspector and OpenDeck logs.
+3. Start PhotoCraft with the control command above, then drag **PhotoCraft Editing Controls → PhotoCraft Edit Control** to a key or encoder.
+4. Enter the token-file path and choose key, encoder-turn, and encoder-press workflows in the Property Inspector.
+5. Keep **PhotoCraft CLI → Run PhotoCraft CLI** for an arbitrary CLI operation; enter its path and JSON argument array, then use **Test command**.
 
 ## Configuration and examples
 
@@ -104,12 +104,16 @@ MIT. PhotoCraft and OpenDeck are independent upstream projects with their own li
 
 # Português do Brasil
 
-Plugin independente, somente para Linux, do [OpenDeck](https://github.com/nekename/OpenDeck) para executar todos os comandos disponíveis da [CLI do PhotoCraft](https://github.com/storytold/photocraft) a partir de uma tecla do Stream Deck. O PhotoCraft não é incluído no plugin: informe o `photocraft-cli` instalado na sua máquina.
+Plugin independente, somente para Linux, do [OpenDeck](https://github.com/nekename/OpenDeck) que dá ao Stream Deck controle ao vivo sobre o documento aberto no [PhotoCraft](https://github.com/storytold/photocraft). Crie máscaras e camadas de ajuste, selecione Crop ou Brush, salve, navegue pelas seleções e use encoders para tamanho e dureza do pincel, zoom, opacidade da camada selecionada e ajustes não destrutivos de revelação.
 
-Cada ação guarda o executável e uma lista JSON de argumentos. O plugin chama o executável diretamente, sem `sh -c` nem outro shell. Assim, JSON, caminhos com espaços e nomes de arquivos não confiáveis são passados com segurança.
+A **PhotoCraft Edit Control** conversa com o aplicativo desktop pelo canal local autenticado. A ação **Run PhotoCraft CLI**, mantida para automações avançadas ou específicas de versão, guarda o executável e um vetor JSON de argumentos e o chama diretamente, sem `sh -c` nem outro shell.
 
 ## Recursos
 
+- Ação dedicada **PhotoCraft Edit Control** para o documento que está aberto no aplicativo, usando o canal local autenticado do PhotoCraft.
+- Ações de tecla para desfazer/refazer/salvar, ferramentas Crop e Brush, máscaras de camada revelar tudo, camadas de ajuste Exposure e Vibrance, comandos de seleção e atalhos úteis de visualização.
+- Modos de encoder para tamanho e dureza do pincel, zoom da tela, opacidade da camada selecionada e os valores das camadas de ajuste Exposure, Brightness/Contrast e Vibrance selecionadas.
+- O encoder pode ter uma ação de pressão independente para ajustar rapidamente a tela, desfazer, usar Crop ou criar uma máscara; o segredo de autenticação fica no arquivo de token local, nunca no perfil do Stream Deck.
 - Ação configurável **Run PhotoCraft CLI** para teclas e encoders.
 - Todos os subcomandos, opções e futuras adições da CLI: a ação repassa exatamente o vetor JSON configurado.
 - Catálogo dinâmico de comandos ou ferramentas da CLI no Property Inspector, com modelo de ação editável e específico do aplicativo.
@@ -121,11 +125,19 @@ Cada ação guarda o executável e uma lista JSON de argumentos. O plugin chama 
 
 Você precisa de Linux x86_64, OpenDeck compatível com OpenAction e PhotoCraft com `photocraft-cli` no `PATH` (ou o caminho absoluto no Property Inspector).
 
+Para usar a **PhotoCraft Edit Control**, inicie o aplicativo com uma porta local e um arquivo de token privado; informe o caminho do arquivo no Property Inspector:
+
+```bash
+photocraft --control 7878 --control-token-file /private/path/photocraft-control.token
+```
+
+O PhotoCraft cria o arquivo de token se ele não existir. A ação aceita somente `localhost`, `127.0.0.1` ou `::1` e lê o token apenas ao enviar a solicitação de controle.
+
 1. Baixe `getcraft-photocraft-opendeck-linux-x86_64.zip` na [release mais recente](../../releases/latest).
 2. No OpenDeck, abra **Plugins** → **Install from file** e escolha o ZIP. Não extraia nem renomeie a pasta `.sdPlugin`.
-3. Arraste **PhotoCraft CLI → Run PhotoCraft CLI** para uma tecla.
-4. Configure o caminho da CLI, se necessário, e o vetor JSON de argumentos.
-5. Use **Test command**. O check verde indica sucesso; o alerta mostra que houve erro, cujo resumo aparece no inspetor e nos logs do OpenDeck.
+3. Arraste **PhotoCraft Editing Controls → PhotoCraft Edit Control** para uma tecla ou encoder.
+4. Informe o caminho do arquivo de token e escolha os fluxos da tecla, do giro e da pressão do encoder no Property Inspector.
+5. Use **PhotoCraft CLI → Run PhotoCraft CLI** para uma operação CLI arbitrária; configure o caminho e o vetor JSON, depois use **Test command**.
 
 ## Configuração
 
